@@ -4,7 +4,7 @@ class CutItem:
     def __init__(self,name,imageName):
     	self.name = name
 	self.imageName = imageName
-	self.image = wx.Image(item.imageName, wx.BITMAP_TYPE_ANY)
+	#self.image = wx.Image(item.imageName, wx.BITMAP_TYPE_ANY)
 	self.imageControl = None
         self.xmin = -1
         self.xmax = -1
