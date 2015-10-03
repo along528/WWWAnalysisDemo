@@ -1,0 +1,7 @@
+
+
+save the lines so they can be rescaled?
+save a history of the images so that I can draw multiple lines
+on the same plot
+it would probably be a good idea to save the lines, cuts and bitmaps to the cutitems objects where they can be better managed
+the rescaling could be done with the updated bitmaps
