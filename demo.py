@@ -1,5 +1,5 @@
 import wx
-from CutItem import CutItem
+from FeatureImage import FeatureImage
 import math
 
 
@@ -7,10 +7,10 @@ import math
 #    def __init__(self, parent):
 #        wx.Panel.__init__(self, parent)
 class ExamplePanel(wx.Panel):
-    def __init__(self, parent,items):
+    def __init__(self, parent,images):
         wx.Panel.__init__(self, parent)
 	self.parent = parent
-	self.items = items
+	self.images = images
 	self.foundItem = -1
 
 	#Create Sizers for organizing materials in frame
@@ -25,9 +25,9 @@ class ExamplePanel(wx.Panel):
         self.hSizer = wx.BoxSizer(wx.HORIZONTAL)
 
 	#Build Grid of Plots
-	for index,item in enumerate(self.items):
-                self.grid.Add(item.imageControl,0,wx.ALIGN_RIGHT) 
-		item.SetGridSizer(self.grid,index)
+	for index,image in enumerate(self.images):
+                self.grid.Add(image.imageControl,0,wx.ALIGN_RIGHT) 
+		image.SetGridSizer(self.grid,index)
 	
 	#Set Bindings
 	self.Bind(wx.EVT_SIZE, self.onSize)
@@ -67,9 +67,9 @@ class ExamplePanel(wx.Panel):
 	#Figure out where we are clicking
         self.startPosition = event.GetPositionTuple()
 	#Determine which figure this corresponds to
-    	for item in self.items:
-	    if item.IsInPosition(self.startPosition):
-	        self.foundItem = item
+    	for image in self.images:
+	    if image.IsInPosition(self.startPosition):
+	        self.foundItem = image
 		break
 	#if we are clicking on a figure then proceed
 	if self.foundItem:
@@ -126,29 +126,29 @@ class ExamplePanel(wx.Panel):
 	    self.foundItem = None
     def onPrint(self,event):
     	print "**********Recorded Cut Values********"
-        for item in self.items:
-	    print "Item",item.index,item.name,":"
-	    for cut,direction in item.CutThresholdsAndDirections:
+        for image in self.images:
+	    print "Item",image.index,image.name,":"
+	    for cut,direction in image.CutThresholdsAndDirections:
 	        print "\t%s %3.2f" % ((">" if direction>0 else "<"),float(cut))
     
     def onClear(self,event):
     	self.ClearAll()
     def ClearAll(self):
-    	for i in range(len(self.items)): self.Clear(i)
+    	for i in range(len(self.images)): self.Clear(i)
     def Clear(self,i=-1):
     	if i < 0: i  = self.foundItem
 	if i < 0: return
-	self.items[i].Clear()
+	self.images[i].Clear()
     def ResizeFrame(self):
 	frameSize =  self.parent.GetClientSize()
 	availableYSpace = frameSize[1]/self.nrows - self.vgap*(self.nrows+1)
 	availableXSpace = frameSize[0]/self.ncols - self.hgap*(self.ncols+1)
-	for item in self.items:
-	    #image = wx.Image(item.imageName, wx.BITMAP_TYPE_ANY)
-	    item.Reset(True)
-	    item.ResizeImage((availableYSpace,availableXSpace))
+	for image in self.images:
+	    #image = wx.Image(image.imageName, wx.BITMAP_TYPE_ANY)
+	    image.Reset(True)
+	    image.ResizeImage((availableYSpace,availableXSpace))
 	#assume images are all of the same size
-	newSize = self.items[0].image.GetSize()
+	newSize = self.images[0].image.GetSize()
 	newFrameSize = (newSize[0]*self.ncols + self.hgap*(self.ncols+1), 
 			newSize[1]*self.nrows + self.vgap*(self.nrows+1)) 
 	newvgap = (frameSize[1] - newSize[1]*self.nrows )/(self.nrows+1)
@@ -180,15 +180,15 @@ frame = wx.Frame(None,size=(800,560)) #,style=wx.MAXIMIZE)
 #frame = wx.Frame(None ,style=wx.DEFAULT_FRAME_STYLE)
 #frame.SetInitialSize((2000,2000))
 
-items = []
-items.append(CutItem("nsfos","SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
-items[0].CutAtBinEdge(True)
-items.append(CutItem("nsfos","SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
-items.append(CutItem("nsfos","SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
-items.append(CutItem("nsfos","SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
-items.append(CutItem("nsfos","SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
-items.append(CutItem("nsfos","SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
-panel = ExamplePanel(frame,items)
+images = []
+images.append(FeatureImage("nsfos","SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
+images[0].CutAtBinEdge(True)
+images.append(FeatureImage("nsfos","SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
+images.append(FeatureImage("nsfos","SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
+images.append(FeatureImage("nsfos","SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
+images.append(FeatureImage("nsfos","SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
+images.append(FeatureImage("nsfos","SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
+panel = ExamplePanel(frame,images)
 frame.Show()
 app.MainLoop()
 

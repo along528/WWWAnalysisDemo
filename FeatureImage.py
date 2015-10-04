@@ -1,7 +1,7 @@
 
 import wx
 import math
-class CutItem:
+class FeatureImage:
     def __init__(self,name,imageName,frame,xmin=-1,xmax=-1,nbins=0):
     	self.name = name
 	self.imageName = imageName
