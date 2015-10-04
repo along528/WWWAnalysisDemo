@@ -1,9 +1,11 @@
 
 import wx
 import math
+from Feature import Feature
 class FeatureImage:
     def __init__(self,name,imageName,frame,xmin=-1,xmax=-1,nbins=0):
     	self.name = name
+	self.feature = Feature(name)
 	self.imageName = imageName
 	self.image = wx.Image(self.imageName, wx.BITMAP_TYPE_ANY)
 	self.bitmap = wx.BitmapFromImage(self.image)
@@ -17,11 +19,11 @@ class FeatureImage:
 	self.index = -1
 	self.dc = None
 	self.doCutAtBinEdge = False
-	self.tmpLines = []
+	self.tmpLines = {}
 	self.savedLines = []
 	self.CutThresholdsAndDirections = []
-
-
+	self.feature.logicalAND = False #otherwise OR
+	self.CutPositions = []
 	#from looking at an image
 	#the first gives the end point of the left margin
 	#as a fraction of the total width
@@ -32,6 +34,11 @@ class FeatureImage:
 	self.fractionTopStart =  6/311.
 	self.fractionBottomEnd =  204/311.
 	self.cuts=[]
+    def ProcessCuts(self):
+        self.feature.Reset()
+    	for cut,direction in self.CutThresholdsAndDirections:
+	    self.feature.Configure(cut,direction)
+	self.feature.Print()
     def CutAtBinEdge(self,switch=False):
     	self.doCutAtBinEdge = switch
     def SetGridSizer(self,grid,index):
@@ -62,12 +69,96 @@ class FeatureImage:
 	if physical: return positionPhysical
 	return positionFraction
     def Save(self):
-    	for line in self.tmpLines:
-	   self.savedLines.append(line)
+        self.savedLines.append(self.tmpLines)
+    	#for line in self.tmpLines:
+	#   self.savedLines.append(line)
 	self.CutThresholdsAndDirections.append([self.positionPhysical,self.cutDirection])
+	self.CutPositions.append(self.positionFraction)
+
+	"""
+	If there are more than 2 cuts we should figure out the logic of these cuts
+	"""
+	if len(self.CutThresholdsAndDirections)==2:
+		cut1 = self.CutThresholdsAndDirections[0][0]
+		cut2 = self.CutThresholdsAndDirections[1][0]
+		direction1 = self.CutThresholdsAndDirections[0][1]
+		direction2 = self.CutThresholdsAndDirections[1][1]
+		#if the cuts go in the same direction then they overlap and we only need to consider one
+		if direction1 == direction2:
+		    if direction1>0:
+		        if cut1 > cut2:
+			    #in this scenario the new cut overlaps partially with the old cut
+			    #combine the arrows from the two
+			    self.CutThresholdsAndDirections.pop(0)
+			    self.CutPositions.pop(0)
+			    i = 0
+			    oldSavedLines = self.savedLines.pop(i)
+			    self.savedLines[i]["ArrowFeather1"] = oldSavedLines["ArrowFeather1"]
+			    self.savedLines[i]["ArrowFeather2"] = oldSavedLines["ArrowFeather2"]
+			    self.savedLines[i]["ArrowBody"] = (self.savedLines[i]["ArrowBody"][0], oldSavedLines["ArrowBody"][1])
+			else:
+			    #in this scenario the new cut completely overlaps with the old cut
+			    #so don't consider it
+			    self.CutThresholdsAndDirections.pop(1)
+			    self.CutPositions.pop(1)
+			    self.savedLines.pop(1)
+		    if direction1<0:
+		        if cut1 > cut2:
+			    #in this scenario the new cut completely overlaps with the old cut
+			    #so don't consider it
+			    self.CutThresholdsAndDirections.pop(1)
+			    self.CutPositions.pop(1)
+			    self.savedLines.pop(1)
+			else:
+			    #in this scenario the new cut overlaps partially with the old cut
+			    #combine the arrows from the two, save the threshold from the new cut
+			    #and get rid of the new cut
+			    self.CutThresholdsAndDirections.pop(0)
+			    self.CutPositions.pop(0)
+			    i = 0
+			    oldSavedLines = self.savedLines.pop(i)
+			    self.savedLines[i]["ArrowFeather1"] = oldSavedLines["ArrowFeather1"]
+			    self.savedLines[i]["ArrowFeather2"] = oldSavedLines["ArrowFeather2"]
+			    self.savedLines[i]["ArrowBody"] = (self.savedLines[i]["ArrowBody"][0], oldSavedLines["ArrowBody"][1])
+		elif direction1 != direction2:
+		    if direction1 > 0  and cut1 < cut2:
+
+			newEndPoint = self.savedLines[1]["ArrowBody"][0]
+		        self.savedLines[0]["ArrowBody"] = (self.savedLines[0]["ArrowBody"][0],newEndPoint)
+			featherCorrection = self.GetHistEdgeRight() - newEndPoint[0]
+			newFeatherEndPointX = self.savedLines[0]["ArrowFeather1"][1][0] - featherCorrection
+			newFeatherEndPointY = self.savedLines[0]["ArrowFeather1"][1][1]
+
+			#newFeatherEndPoint1 = self.savedLines[1][
+		        self.savedLines[0]["ArrowFeather1"] = (newEndPoint,(newFeatherEndPointX,newFeatherEndPointY))
+			newFeatherEndPointY = self.savedLines[0]["ArrowFeather2"][1][1]
+		        self.savedLines[0]["ArrowFeather2"] = (newEndPoint,(newFeatherEndPointX,newFeatherEndPointY))
+			self.feature.logicalAND=True
+		    elif direction1 > 0  and cut1 > cut2:
+			self.feature.logicalAND=False
+		    elif direction1 < 0  and cut1 > cut2:
+			newEndPoint = self.savedLines[1]["ArrowBody"][0]
+		        self.savedLines[0]["ArrowBody"] = (self.savedLines[0]["ArrowBody"][0],newEndPoint)
+			featherCorrection = (self.GetHistEdgeLeft() - newEndPoint[0])
+			newFeatherEndPointX = self.savedLines[0]["ArrowFeather1"][1][0] - featherCorrection
+			newFeatherEndPointY = self.savedLines[0]["ArrowFeather1"][1][1]
+			#newFeatherEndPoint1 = self.savedLines[1][
+		        self.savedLines[0]["ArrowFeather1"] = (newEndPoint,(newFeatherEndPointX,newFeatherEndPointY))
+			newFeatherEndPointY = self.savedLines[0]["ArrowFeather2"][1][1]
+		        self.savedLines[0]["ArrowFeather2"] = (newEndPoint,(newFeatherEndPointX,newFeatherEndPointY))
+			self.feature.logicalAND=True
+		    elif direction1 < 0  and cut1 < cut2:
+			self.feature.logicalAND=False
+		        
+
+
+    def GetNCuts(self):
+    	return len(self.CutThresholdsAndDirections)
     def Clear(self):
     	self.savedLines = []
 	self.CutThresholdsAndDirections = []
+	self.CutPositions = []
+	self.feature.Reset()
 	self.Reset()
     def ComputeCutThreshold(self,position):
 	self.positionFraction = self.GetMousePosition(position)
@@ -94,7 +185,7 @@ class FeatureImage:
 	y2 = bottomLinePosition
 	if xfrac < self.fractionBinStart or xfrac > self.fractionBinEnd: return
 	line1 = ((x1,y1),(x2,y2))
-	self.tmpLines.append(line1)
+	self.tmpLines["Threshold"]= line1
 	self.DrawLines(line1)
     def DrawArrow(self,startPosition,currentPosition,featherLength=20,featherAngle=math.pi/4):
         direction = self.ComputeCutDirection(startPosition,currentPosition)
@@ -112,23 +203,30 @@ class FeatureImage:
 	arrowY2 = (y1+y2)/2
 	if direction>0:
 		arrowX2 = self.GetHistEdgeRight()
+		for cut in self.CutPositions:
+		    cut = cut*self.GetSize()[0]
+		    if cut > arrowX1 and cut < arrowX2: arrowX2 = cut
+		
 	elif direction<0:
 		arrowX2 = self.GetHistEdgeLeft()
+		for cut in self.CutPositions:
+		    cut = cut*self.GetSize()[0]
+		    if cut < arrowX1 and cut > arrowX2: arrowX2 = cut
 	else:
 		print "Error! Problem drawing arrow"
 		return
 	lines = ()
 	line1=((arrowX1,arrowY1),(arrowX2,arrowY2))
-	self.tmpLines.append(line1)
+	self.tmpLines["ArrowBody"] = line1
 	arrowFeatherX1 = arrowX2
 	arrowFeatherY1 = arrowY2
 	arrowFeatherX2 = arrowX2 - float(direction)*featherLength*math.cos(featherAngle)
 	arrowFeatherY2 = arrowY2 - featherLength*math.sin(featherAngle)
 	feather1=((arrowFeatherX1,arrowFeatherY1),(arrowFeatherX2,arrowFeatherY2))
-	self.tmpLines.append(feather1)
+	self.tmpLines["ArrowFeather1"] = feather1
 	arrowFeatherY2 = arrowY2 + featherLength*math.sin(featherAngle)
 	feather2=((arrowFeatherX1,arrowFeatherY1),(arrowFeatherX2,arrowFeatherY2))
-	self.tmpLines.append(feather2)
+	self.tmpLines["ArrowFeather2"]= feather2
 	self.DrawLines(line1,feather1,feather2)
 
     def ComputeCutDirection(self,startPosition,currentPosition):
@@ -156,12 +254,13 @@ class FeatureImage:
 	ymax = ymin + imageSize[1]
 	return (ymin,ymax)
     def Reset(self,full=False):
-        self.tmpLines = []
+        self.tmpLines = {}
 	if full: self.image = wx.Image(self.imageName, wx.BITMAP_TYPE_ANY)
 	self.bitmap = wx.BitmapFromImage(self.image)
 	self.imageControl.SetBitmap(self.bitmap)  
-	for line in self.savedLines:
-	    self.DrawLines(line)
+	for cut in self.savedLines:
+	    for line in cut.keys():
+	        self.DrawLines(cut[line])
     def getLowBinEdge(self,xvalue, getInXCoordinates=False):
     	#xvalue should be the fraction along the total width of the image
 

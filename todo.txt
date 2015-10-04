@@ -5,3 +5,12 @@ save a history of the images so that I can draw multiple lines
 on the same plot
 it would probably be a good idea to save the lines, cuts and bitmaps to the cutitems objects where they can be better managed
 the rescaling could be done with the updated bitmaps
+
+it would nice to have it so that if drawing cuts for a an overlapping region that the arrows reflect that
+
+
+needs to be able to understand logical ORS and ANDS when putting combinations of cuts together.
+    If the cuts point in the same direction, then I can only consider one, but it depends on the order of the cuts
+    if they point in opposite directions it is an OR if they point away from eachother
+    but it is an AND if they point towards eachother.  I have to consider both 
+I need to be able to adjust the previous cuts based on the current cuts

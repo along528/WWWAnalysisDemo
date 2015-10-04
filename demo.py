@@ -12,6 +12,7 @@ class ExamplePanel(wx.Panel):
 	self.parent = parent
 	self.images = images
 	self.foundItem = -1
+	self.clearMode = False
 
 	#Create Sizers for organizing materials in frame
 	self.reInitBuffer = False
@@ -44,15 +45,21 @@ class ExamplePanel(wx.Panel):
         self.Bind(wx.EVT_BUTTON, self.OnClick,self.button)
         self.clearButton =wx.Button(self, label="Clear")
         self.Bind(wx.EVT_BUTTON, self.onClear,self.clearButton)
+        self.clearAllButton =wx.Button(self, label="Clear All")
+        self.Bind(wx.EVT_BUTTON, self.onClearAll,self.clearAllButton)
         self.printButton =wx.Button(self, label="Print")
         self.Bind(wx.EVT_BUTTON, self.onPrint,self.printButton)
+        self.runButton =wx.Button(self, label="Run")
+        self.Bind(wx.EVT_BUTTON, self.onRun,self.runButton)
 
 
 
 	#Apply Sizers
 	self.hSizer.Add(self.button,0,wx.CENTER)
 	self.hSizer.Add(self.clearButton,0,wx.CENTER)
+	self.hSizer.Add(self.clearAllButton,0,wx.CENTER)
 	self.hSizer.Add(self.printButton,0,wx.CENTER)
+	self.hSizer.Add(self.runButton,0,wx.CENTER)
         self.mainSizer.Add(self.grid, 0) 
         self.mainSizer.Add(self.hSizer,0,wx.CENTER) 
         self.SetSizerAndFit(self.mainSizer)
@@ -62,6 +69,8 @@ class ExamplePanel(wx.Panel):
 	would be.  The threshold is temporarily stored.
 	If we are not clicking on the appropriate region
 	then nothing happens'''
+
+
 
         if not self.HasCapture(): self.CaptureMouse()
 	#Figure out where we are clicking
@@ -73,12 +82,15 @@ class ExamplePanel(wx.Panel):
 		break
 	#if we are clicking on a figure then proceed
 	if self.foundItem:
-	    #calculate the threshold this corresponds to 
-	    #for the particular figure
-	    self.foundItem.ComputeCutThreshold(self.startPosition)
-	    #clear the drawing and put a line there
-	    self.foundItem.Reset()
-	    self.foundItem.DrawThreshold(self.startPosition)
+	    if self.clearMode:
+	        self.foundItem.Clear()
+	    else:
+	        #calculate the threshold this corresponds to 
+	        #for the particular figure
+	        self.foundItem.ComputeCutThreshold(self.startPosition)
+	        #clear the drawing and put a line there
+	        self.foundItem.Reset()
+	        self.foundItem.DrawThreshold(self.startPosition)
 
     def onMotion(self,event):
     	'''While holding down the left button
@@ -88,6 +100,7 @@ class ExamplePanel(wx.Panel):
     	if not event.LeftIsDown():
 		event.Skip(True)
 		return 
+	if self.clearMode: return
         if not self.HasCapture(): self.CaptureMouse()
 	currentPosition = event.GetPositionTuple()
 	#if we already found an image from the left down
@@ -112,6 +125,9 @@ class ExamplePanel(wx.Panel):
 	if so that information should be saved and the image
 	is kept. If not, the inputs and drawings are thrown away.
 	'''
+	if self.clearMode: 
+		self.clearMode = False
+		return
         if self.HasCapture():
             self.endPosition = event.GetPositionTuple()
 	    print "stop",self.endPosition
@@ -121,17 +137,33 @@ class ExamplePanel(wx.Panel):
     	    if self.foundItem: 
 	    	if self.foundItem.cutDirection==0:
 	        	self.foundItem.Reset()
-		self.foundItem.Save()
+		elif self.foundItem.GetNCuts()==2:
+			self.foundItem.cutDirection=0
+	        	self.foundItem.Reset()
+		else:
+			self.foundItem.Save()
+			self.foundItem.Reset()
 		self.foundItem.cutDirection=0
 	    self.foundItem = None
     def onPrint(self,event):
     	print "**********Recorded Cut Values********"
         for image in self.images:
 	    print "Item",image.index,image.name,":"
+	    index=0
 	    for cut,direction in image.CutThresholdsAndDirections:
+	    	
+		if index>0:  
+			if image.feature.logicalAND: print "\tAND"
+			else: print "\tOR"
 	        print "\t%s %3.2f" % ((">" if direction>0 else "<"),float(cut))
-    
+		index+=1
+    def onRun(self,event):
+        print "Running..."
+	for image in self.images:
+	    image.ProcessCuts()
     def onClear(self,event):
+    	self.clearMode = True
+    def onClearAll(self,event):
     	self.ClearAll()
     def ClearAll(self):
     	for i in range(len(self.images)): self.Clear(i)
@@ -181,13 +213,13 @@ frame = wx.Frame(None,size=(800,560)) #,style=wx.MAXIMIZE)
 #frame.SetInitialSize((2000,2000))
 
 images = []
-images.append(FeatureImage("nsfos","SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
+images.append(FeatureImage("NSFOS","SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
 images[0].CutAtBinEdge(True)
-images.append(FeatureImage("nsfos","SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
-images.append(FeatureImage("nsfos","SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
-images.append(FeatureImage("nsfos","SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
-images.append(FeatureImage("nsfos","SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
-images.append(FeatureImage("nsfos","SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
+images.append(FeatureImage("NSFOS","SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
+images.append(FeatureImage("NSFOS","SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
+images.append(FeatureImage("NSFOS","SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
+images.append(FeatureImage("NSFOS","SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
+images.append(FeatureImage("NSFOS","SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
 panel = ExamplePanel(frame,images)
 frame.Show()
 app.MainLoop()
