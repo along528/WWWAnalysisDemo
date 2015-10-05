@@ -12,7 +12,10 @@ class Feature:
     def Reset(self):
     	self.cuts = []
 	self.cutString = ""
-	self.logicalAND = False
+	#self.logicalAND = False
+    def HasCuts(self):
+    	if self.cutString!="": return True
+	return False
     def Print(self):
 	print "Configured Feature",self.featureType,"for cuts:"
 	print "\t",self.cutString
@@ -149,4 +152,5 @@ class Feature:
 		self.cutString+= " %s " % ("&&" if self.logicalAND else "||")
 		self.cutString+= self.cuts[1]
 
+	print "feature",self.cutString
 

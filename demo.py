@@ -1,5 +1,6 @@
 import wx
 from FeatureImage import FeatureImage
+from os import system
 import math
 
 
@@ -159,8 +160,15 @@ class ExamplePanel(wx.Panel):
 		index+=1
     def onRun(self,event):
         print "Running..."
+	ofile = open('output/cuts.txt','w')
 	for image in self.images:
 	    image.ProcessCuts()
+	    if image.feature.HasCuts():
+	        ofile.write(image.feature.cutString+"\n")
+	ofile.close()
+	#I may want to make this pre-compiled
+	system("root -q -b -l RunCuts.cxx")
+
     def onClear(self,event):
     	self.clearMode = True
     def onClearAll(self,event):

@@ -78,6 +78,7 @@ class FeatureImage:
 	"""
 	If there are more than 2 cuts we should figure out the logic of these cuts
 	"""
+	self.feature.Reset()
 	if len(self.CutThresholdsAndDirections)==2:
 		cut1 = self.CutThresholdsAndDirections[0][0]
 		cut2 = self.CutThresholdsAndDirections[1][0]
@@ -151,6 +152,8 @@ class FeatureImage:
 			self.feature.logicalAND=False
 		        
 
+	for cut,direction in self.CutThresholdsAndDirections:
+	    self.feature.Configure(cut,direction)
 
     def GetNCuts(self):
     	return len(self.CutThresholdsAndDirections)
