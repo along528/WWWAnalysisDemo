@@ -27,7 +27,10 @@ void RunCuts(){
 
 	TCut weight = "weight_xsec*weight_mc*weight_reco*weight_trigger*weight_chargemisid*weight_pileup*weight_mxm*weight_btag_eff85";
 
-	TFile *inputTreeFile = new TFile("input/test.root");
+	//TFile *inputTreeFile = new TFile("input/test.root");
+	//TFile *inputTreeFile = new TFile("input/combined.root");
+	TFile *inputTreeFile = new TFile("input/data.root");
+	//TFile *inputTreeFile = new TFile("input/0sfos.root");
 	TTree *inputTree = (TTree*)inputTreeFile->Get("physics");
 	TFile *outputTreeFile = new TFile("output/output.root","recreate");
 	float  nEventsBefore = inputTree->GetEntries();
@@ -37,7 +40,7 @@ void RunCuts(){
 	outputTreeFile->Write();
 	TTree *outputTree = (TTree*)outputTreeFile->Get(outputTreeName.c_str());
 	float  nEventsAfter = outputTree->GetEntries();
-	std::cout << "# Entries before cuts: " << nEventsAfter << std::endl;
+	std::cout << "# Entries after cuts: " << nEventsAfter << std::endl;
 	if (nEventsBefore!=0.) std::cout << "Filter Efficiency = " <<  nEventsAfter/nEventsBefore << std::endl;
 	outputTreeFile->Close();
 	inputTreeFile->Close();

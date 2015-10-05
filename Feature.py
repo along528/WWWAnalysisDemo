@@ -51,7 +51,7 @@ class Feature:
 		#in 1 SFOS you also have eem and mme (NMUONS == 1 or 2)
 		#in 2 SFOS you have eee and mmm (NMUONS == 0 or 3)
   	elif self.featureType == "Mt":
-		cutString ="allLep_mt_STVF <SIGN> <THRESHOLD>"
+		cutString ="allLep_mt <SIGN> <THRESHOLD>"
 		#self.parameters["Thresh"] = range(0,60*GeV,10*GeV)
 		#self.parametersInclusive["Thresh"] = 0
   	elif self.featureType == "DPhi":

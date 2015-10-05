@@ -10,3 +10,15 @@ the rescaling could be done with the updated bitmaps
 Add status bar that indicates things like:
 	clear mode
 	running mode
+
+
+Timing and performance
+   running over the full signal plus background with no cuts takes about 2 minutes on my computer
+   the runtime scales somehow with the efficiency of the cut. So, keeping only 1 and 2 SFOS,
+   with a roughly 90% efficiency takes about 1 minute 50 seconds while keeping the 0 SFOS region,
+   which is the rest, takes only about 20 seconds. For the 1 and 2 SFOS regions, it would be good 
+   to trim out some of the diboson events, which would improve the speed without affecting the estimate much.
+   But for the 0 SFOS region I likely need these statistics.  I might want to make it smart enough to choose the appropriate
+   input based on the selection
+
+   running on data is essentially instantaneous
