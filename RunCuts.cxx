@@ -22,17 +22,19 @@ void RunCuts(){
 	    TCut cut = line.c_str();
 	    cuts+=cut;
 	}
+	TCut threeLepCut = "Sum$(lep_pt > 20000) >= 3";
+	cuts += threeLepCut;
 	std::cout << "Cuts are:"<<std::endl;
 	cuts.Print();
 
-	TCut weight = "weight_xsec*weight_mc*weight_reco*weight_trigger*weight_chargemisid*weight_pileup*weight_mxm*weight_btag_eff85";
 
-	//TFile *inputTreeFile = new TFile("input/test.root");
-	//TFile *inputTreeFile = new TFile("input/combined.root");
-	TFile *inputTreeFile = new TFile("input/data.root");
-	//TFile *inputTreeFile = new TFile("input/0sfos.root");
+	std::cout << "Signal+BG:" <<std::endl;
+	TFile *inputTreeFile = new TFile("input/combined.root");
+	//TFile *inputTreeFile = new TFile("input/data.root");
+	//TFile *inputTreeFile = new TFile("input/signal.root");
 	TTree *inputTree = (TTree*)inputTreeFile->Get("physics");
 	TFile *outputTreeFile = new TFile("output/output.root","recreate");
+	//TFile *outputTreeFile = new TFile("output/data.root","recreate");
 	float  nEventsBefore = inputTree->GetEntries();
 	std::cout << "# Entries before cuts: " << nEventsBefore << std::endl;
 	string outputTreeName = "physics_cut";
@@ -44,6 +46,23 @@ void RunCuts(){
 	if (nEventsBefore!=0.) std::cout << "Filter Efficiency = " <<  nEventsAfter/nEventsBefore << std::endl;
 	outputTreeFile->Close();
 	inputTreeFile->Close();
+
+	std::cout << "Data:" <<std::endl;
+	TFile *inputDataTreeFile = new TFile("input/data.root");
+	TTree *inputDataTree = (TTree*)inputDataTreeFile->Get("physics");
+	TFile *outputDataTreeFile = new TFile("output/dataoutput.root","recreate");
+	//TFile *outputTreeFile = new TFile("output/data.root","recreate");
+	nEventsBefore = inputDataTree->GetEntries();
+	std::cout << "# Entries before cuts: " << nEventsBefore << std::endl;
+	outputTreeName = "physics_cut";
+	inputDataTree->CopyTree(cuts)->Write(outputTreeName.c_str());
+	outputDataTreeFile->Write();
+	TTree *outputDataTree = (TTree*)outputDataTreeFile->Get(outputTreeName.c_str());
+	nEventsAfter = outputDataTree->GetEntries();
+	std::cout << "# Entries after cuts: " << nEventsAfter << std::endl;
+	if (nEventsBefore!=0.) std::cout << "Filter Efficiency = " <<  nEventsAfter/nEventsBefore << std::endl;
+	outputDataTreeFile->Close();
+	inputDataTreeFile->Close();
 
 	
 

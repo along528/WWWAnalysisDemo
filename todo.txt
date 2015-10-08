@@ -22,3 +22,9 @@ Timing and performance
    input based on the selection
 
    running on data is essentially instantaneous
+
+I don't seem to be reproducing the signal and background yields well at all.  I also need to be careful not to scale the fake estimate by the luminosity, and 
+I need to apply the diboson k-factors appropriately.
+
+
+move wzbg.root,zzbg.root fakebg.root and otherbg.root to local and then filter with 3lep cut

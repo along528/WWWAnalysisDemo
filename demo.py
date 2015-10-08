@@ -12,8 +12,9 @@ class ExamplePanel(wx.Panel):
         wx.Panel.__init__(self, parent)
 	self.parent = parent
 	self.images = images
-	self.foundItem = -1
+	self.foundItem = None
 	self.clearMode = False
+
 
 	#Create Sizers for organizing materials in frame
 	self.reInitBuffer = False
@@ -110,7 +111,7 @@ class ExamplePanel(wx.Panel):
 	    #temporarily save the current direction
 	    #and check to see if there is any update in the direction
 	    #from a possible previous onMotion event.
-	    oldCutDirection = self.foundItem.cutDirection
+	    oldCutDirection = self.foundItem.GetCutDirection()
 	    newCutDirection = self.foundItem.ComputeCutDirection(self.startPosition,currentPosition)
 	    if oldCutDirection!= newCutDirection:
 	        #if there is an update to the direction
@@ -131,7 +132,6 @@ class ExamplePanel(wx.Panel):
 		return
         if self.HasCapture():
             self.endPosition = event.GetPositionTuple()
-	    print "stop",self.endPosition
 	    self.ReleaseMouse()
 	    #if not self.drawnArrows:
 	    #	self.Clear()
@@ -145,7 +145,7 @@ class ExamplePanel(wx.Panel):
 			self.foundItem.Save()
 			self.foundItem.Reset()
 		self.foundItem.cutDirection=0
-	    self.foundItem = None
+	self.foundItem = None
     def onPrint(self,event):
     	print "**********Recorded Cut Values********"
         for image in self.images:
@@ -156,6 +156,7 @@ class ExamplePanel(wx.Panel):
 		if index>0:  
 			if image.feature.logicalAND: print "\tAND"
 			else: print "\tOR"
+		print cut
 	        print "\t%s %3.2f" % ((">" if direction>0 else "<"),float(cut))
 		index+=1
     def onRun(self,event):
@@ -168,6 +169,9 @@ class ExamplePanel(wx.Panel):
 	ofile.close()
 	#I may want to make this pre-compiled
 	system("root -q -b -l RunCuts.cxx")
+	system("root -q -b -l WriteHistograms.cxx")
+	system("root -q -b -l Draw.cxx")
+	print "Done!"
 
     def onClear(self,event):
     	self.clearMode = True
@@ -221,13 +225,14 @@ frame = wx.Frame(None,size=(800,560)) #,style=wx.MAXIMIZE)
 #frame.SetInitialSize((2000,2000))
 
 images = []
-images.append(FeatureImage("NSFOS","input/SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
+images.append(FeatureImage("NSFOS","output/plots/unblinded/logY/nsfos.png",frame,xmin=-0.5,xmax=2.5,nbins=3))
 images[0].CutAtBinEdge(True)
-images.append(FeatureImage("NSFOS","input/SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
-images.append(FeatureImage("NSFOS","input/SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
-images.append(FeatureImage("NSFOS","input/SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
-images.append(FeatureImage("NSFOS","input/SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
-images.append(FeatureImage("NSFOS","input/SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
+#images.append(FeatureImage("NSFOS","input/SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
+images.append(FeatureImage("NSFOS","output/plots/unblinded/logY/nsfos.png",frame,xmin=-0.5,xmax=2.5,nbins=3))
+images.append(FeatureImage("NSFOS","output/plots/unblinded/logY/nsfos.png",frame,xmin=-0.5,xmax=2.5,nbins=3))
+images.append(FeatureImage("NSFOS","output/plots/unblinded/logY/nsfos.png",frame,xmin=-0.5,xmax=2.5,nbins=3))
+images.append(FeatureImage("NSFOS","output/plots/unblinded/logY/nsfos.png",frame,xmin=-0.5,xmax=2.5,nbins=3))
+images.append(FeatureImage("NSFOS","output/plots/unblinded/logY/nsfos.png",frame,xmin=-0.5,xmax=2.5,nbins=3))
 panel = ExamplePanel(frame,images)
 frame.Show()
 app.MainLoop()

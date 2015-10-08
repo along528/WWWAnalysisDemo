@@ -27,12 +27,23 @@ class FeatureImage:
 	#from looking at an image
 	#the first gives the end point of the left margin
 	#as a fraction of the total width
+	"""
 	self.fractionBinStart = 52./326.
 	#and this gives the start point of the right margin
 	#as a fraction of the total width
 	self.fractionBinEnd = 307./326.
 	self.fractionTopStart =  6/311.
 	self.fractionBottomEnd =  204/311.
+	"""
+	self.fractionBinStart = 1.65/16.6
+	#and this gives the start point of the right margin
+	#as a fraction of the total width
+	self.fractionBinEnd = 15.95/16.6
+	self.fractionTopStart =  0.65/29.8
+	self.fractionBottomEnd =  26.68/29.8
+
+	
+
 	self.cuts=[]
     def ProcessCuts(self):
         self.feature.Reset()
@@ -49,7 +60,7 @@ class FeatureImage:
     	if not self.gridSizer: 
 		print "Error! Item not aware of grid position"
 		return False
-	xRange = self.GetXRange()
+	xRange = self.GetXRange(histOnly=True)
 	yRange = self.GetYRange()
         imagePosition = self.GetPosition()
 	imageSize = self.GetSize()
@@ -61,11 +72,10 @@ class FeatureImage:
 	return False
     def GetMousePosition(self,position,physical=False):
 	positionFraction = float(position[0]-self.GetPosition()[0])/float(self.GetSize()[0])
-	positionPhysical = (self.xmax-self.xmin)*(positionFraction-self.fractionBinStart)/(self.fractionBinEnd-self.fractionBinStart)
+	positionPhysical = (self.xmax-self.xmin)*(positionFraction-self.fractionBinStart)/(self.fractionBinEnd-self.fractionBinStart) + self.xmin
         if self.doCutAtBinEdge:
 	    positionFraction = self.getLowBinEdge(positionFraction,True)
 	    positionPhysical = self.getLowBinEdge(positionFraction)
-	print "posblah",positionFraction,positionPhysical
 	if physical: return positionPhysical
 	return positionFraction
     def Save(self):
@@ -163,13 +173,14 @@ class FeatureImage:
 	self.CutPositions = []
 	self.feature.Reset()
 	self.Reset()
+    def GetCutDirection(self):
+        return self.cutDirection
     def ComputeCutThreshold(self,position):
 	self.positionFraction = self.GetMousePosition(position)
 	self.positionPhysical = self.GetMousePosition(position,physical=True)
     def DrawLines(self,*args):
 	dc = wx.MemoryDC(self.bitmap)
 	dc.SetPen(wx.Pen(wx.RED, 1))
-	print "args",args
 	for line in args:
 		x1,y1 = line[0]
 		x2,y2 = line[1]
@@ -186,7 +197,9 @@ class FeatureImage:
 	y1 = topLinePosition 
 	x2 = xfrac*self.GetSize()[0]
 	y2 = bottomLinePosition
-	if xfrac < self.fractionBinStart or xfrac > self.fractionBinEnd: return
+	#there was some problems drawing at the boundary, so shift slightly inward
+	eps = .00001
+	if xfrac+ eps< self.fractionBinStart or xfrac-eps > self.fractionBinEnd: return
 	line1 = ((x1,y1),(x2,y2))
 	self.tmpLines["Threshold"]= line1
 	self.DrawLines(line1)
@@ -241,14 +254,16 @@ class FeatureImage:
 	else:
 	    self.cutDirection = 0
 
-	print "Cut direction is",self.cutDirection
 	return self.cutDirection
 
-    def GetXRange(self):
+    def GetXRange(self,histOnly=False):
         imagePosition = self.GetPosition()
 	imageSize = self.GetSize()
 	xmin = imagePosition[0]
 	xmax = xmin + imageSize[0]
+	if histOnly:
+	    xmin = imagePosition[0]+self.fractionBinStart*imageSize[0]
+	    xmax = imagePosition[0]+self.fractionBinEnd*imageSize[0]
 	return (xmin,xmax)
     def GetYRange(self):
         imagePosition = self.GetPosition()
@@ -270,15 +285,16 @@ class FeatureImage:
 	position = self.fractionBinStart
 	step = (self.fractionBinEnd - self.fractionBinStart)/self.nbins
 	binnum = -1
+
 	while True: #position < self.fractionBinEnd:
-	    print "position",position
-	    if xvalue < position:
+	    if xvalue <= position:
 	        break
 	    position += step
 	    binnum+=1
+
+	#if binnum < 0:  binnum = 0
 	
 	if binnum < 0  or binnum > self.nbins-1: 
-		print "Couldn't get cut value for input",xvalue
 		return None
 	binEdge = self.xmin + (self.xmax - self.xmin)*binnum/self.nbins
 	if getInXCoordinates:
@@ -315,8 +331,6 @@ class FeatureImage:
 	#first try setting available x space
 	newSize1 = (availableSpace[0],aspectRatio*availableSpace[0])
 	newSize2 = (availableSpace[1]/aspectRatio,availableSpace[1])
-	print newSize1
-	print newSize2
 	newSize = None
 	if not newSize1[0] > availableSpace[0] and not newSize1[1] > availableSpace[1]: 
 		newSize = newSize1
@@ -325,7 +339,6 @@ class FeatureImage:
 	else:
 		print "ERROR: couldn't resize into space",availableSpace
 		return False
-	print "newsize",newSize
 	self.image.Rescale(newSize[0],newSize[1],quality=wx.IMAGE_QUALITY_BICUBIC )
 	self.bitmap = wx.BitmapFromImage(self.image)
 	self.imageControl.SetBitmap(self.bitmap)  

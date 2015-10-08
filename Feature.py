@@ -152,5 +152,4 @@ class Feature:
 		self.cutString+= " %s " % ("&&" if self.logicalAND else "||")
 		self.cutString+= self.cuts[1]
 
-	print "feature",self.cutString
 
