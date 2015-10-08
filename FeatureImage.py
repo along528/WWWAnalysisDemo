@@ -14,7 +14,9 @@ class FeatureImage:
 	self.fractionBottomEnd =  26.68/29.8
 	self.binsPhysical = []
 	self.binsFraction= []
-	self.imageName = "input/plots/unblinded/logY/"+name+".png"
+	self.imageNames = {}
+	self.SetImageNames()
+	self.imageName = self.imageNames["Blinded"]["LogY"]
 	self.image = wx.Image(self.imageName, wx.BITMAP_TYPE_ANY)
 	self.bitmap = wx.BitmapFromImage(self.image)
 	self.frame = frame
@@ -37,6 +39,16 @@ class FeatureImage:
 	#from looking at an image
 	#the first gives the end point of the left margin
 	#as a fraction of the total width
+    def SetImageNames(self,useInput=True):
+        baseName = "output"
+        if useInput: baseName="input"
+	self.imageNames = {}
+	self.imageNames["Unblinded"] = {}
+	self.imageNames["Unblinded"]["LinearY"] = baseName+"/plots/unblinded/linearY/"+self.name+".png"
+	self.imageNames["Unblinded"]["LogY"] = baseName+"/plots/unblinded/logY/"+self.name+".png"
+	self.imageNames["Blinded"] = {}
+	self.imageNames["Blinded"]["LinearY"] = baseName+"/plots/blinded/linearY/"+self.name+".png"
+	self.imageNames["Blinded"]["LogY"] = baseName+"/plots/blinded/logY/"+self.name+".png"
     def Configure(self):
     	nbins = 0
 	xmin = -1 
@@ -59,8 +71,8 @@ class FeatureImage:
 	    isLogX = True
         elif self.name=="phi":
 	    nbins = 16
-	    xmin = -math.pi()
-	    xmax = math.pi()
+	    xmin = -math.pi
+	    xmax = math.pi
 	    isLogX = False
         elif self.name=="eta":
 	    nbins = 15
@@ -99,8 +111,8 @@ class FeatureImage:
 	    isLogX = True
         elif self.name=="metphi":
 	    nbins = 16
-	    xmin = -math.pi()
-	    xmax = math.pi()
+	    xmin = -math.pi
+	    xmax = math.pi
 	    isLogX = False
         elif self.name=="metsumet":
 	    nbins = 30
@@ -124,8 +136,8 @@ class FeatureImage:
 	    isLogX = True
         elif self.name=="deltaphi":
 	    nbins = 16
-	    xmin = -math.pi()
-	    xmax = math.pi()
+	    xmin = -math.pi
+	    xmax = math.pi
 	    isLogX = False
 	else:
 	    print "Error! Couldn't configure feature with name",self.name
@@ -141,7 +153,14 @@ class FeatureImage:
 	else:
 	    self.binsPhysical = HistTools.getLinearBins(nbins,xmin,xmax)
 	    self.binsFraction = HistTools.getLinearBins(nbins,self.fractionBinStart,self.fractionBinEnd)
-
+    def ChangeImage(self,blinded=True,logY=True):
+        if blinded:
+	    if logY: self.imageName = self.imageNames["Blinded"]["LogY"]
+	    else: self.imageName = self.imageNames["Blinded"]["LinearY"]
+        else:
+	    if logY: self.imageName = self.imageNames["Unblinded"]["LogY"]
+	    else: self.imageName = self.imageNames["Unblinded"]["LinearY"]
+	self.Reset(full=True)
     def ProcessCuts(self):
         self.feature.Reset()
     	for cut,direction in self.CutThresholdsAndDirections:
@@ -171,7 +190,6 @@ class FeatureImage:
 	positionFraction = float(position[0]-self.GetPosition()[0])/float(self.GetSize()[0])
 	#positionPhysical = (self.xmax-self.xmin)*(positionFraction-self.fractionBinStart)/(self.fractionBinEnd-self.fractionBinStart) + self.xmin
 	positionPhysical = -1.
-	print "range",self.fractionBinStart,self.fractionBinEnd,self.xmin,self.xmax
 	if self.isLogX:
 	    positionPhysical = HistTools.convertLogFractionToPhysical(positionFraction,self.fractionBinStart,self.fractionBinEnd,self.xmin,self.xmax)
 	else:
@@ -180,7 +198,6 @@ class FeatureImage:
 	    positionFractionTmp = positionFraction
 	    positionFraction = self.getLowBinEdge(positionFractionTmp,True)
 	    positionPhysical = self.getLowBinEdge(positionFractionTmp)
-	print positionPhysical,positionFraction
 	if physical: return positionPhysical
 	return positionFraction
     def Save(self):

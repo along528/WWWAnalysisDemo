@@ -65,20 +65,38 @@ void Draw(){
 		     }
 
 		     double maxBG=-1;
+		     double minBG=100000000;
+		     double previousMinBG = 1;
 		     for(int bin = 1; bin<hBG->GetNbinsX()+1; bin++){
 			 if (hBG->GetBinContent(bin) > maxBG) 
 				maxBG = hBG->GetBinContent(bin);
+			 if (hBG->GetBinContent(bin) < minBG) {
+			 	previousMinBG = minBG;
+				minBG = hBG->GetBinContent(bin);
+			 }
 		     }
 
 		     double maxSignal=-1;
 		     double minSignal=100000000;
+		     double previousMinSignal = 1;
 		     for(int bin = 1; bin<hSignal->GetNbinsX()+1; bin++){
 			 if (hSignal->GetBinContent(bin) > maxSignal) 
 				maxSignal = hSignal->GetBinContent(bin);
-			 if (hSignal->GetBinContent(bin) < minSignal) 
+			 if (hSignal->GetBinContent(bin) < minSignal) {
+			 	previousMinSignal = minSignal;
 				minSignal = hSignal->GetBinContent(bin);
+			 }
 		     }
 
+		     double min = minBG;
+		     double max = maxBG;
+		     double previousMin = minBG;
+		     if (minSignal < min) min = minSignal;
+		     if (maxSignal > max) max = maxSignal;
+		     if (previousMinSignal < previousMinBG) previousMin = minSignal;
+		     if (min==0.) min = previousMin;  //if 0 set to the one before
+		     if (min==0.) min = .01; //if for some reason still 0, just set it to something non-zero
+			
 
 
 		     canvas->SetLogx(false);
@@ -86,14 +104,13 @@ void Draw(){
 			 name=="mt" ||
 			 name=="met" ||
 			 name=="metsumet"){
-
 			 canvas->SetLogx(true);
 		     }
 			
 		
 		     canvas->SetLogy(false);
-		     hBG->GetYaxis()->SetRangeUser(0.,maxBG*1.2);
-		     hBG->GetYaxis()->SetTitleOffset(1.2);
+		     hBG->GetYaxis()->SetRangeUser(0.,max*1.2);
+		     hBG->GetYaxis()->SetTitleOffset(1.3);
 		     hBG->GetXaxis()->SetTitleOffset(1.2);
 		     canvas->GetPad(0)->SetTopMargin(.02);
 		     canvas->GetPad(0)->SetBottomMargin(.10);
@@ -103,9 +120,10 @@ void Draw(){
 		     if (drawData) canvas->SaveAs(("output/plots/unblinded/linearY/"+name+".png").c_str());
 		     else canvas->SaveAs(("output/plots/blinded/linearY/"+name+".png").c_str());
 		     canvas->SetLogy(true);
-		     double min = (minSignal+(maxSignal-minSignal)*0.1)/10.;
-		     std::cout << "min: " << min << std::endl;
-		     hBG->GetYaxis()->SetRangeUser(min,maxBG*10.);
+		     double logmin = min/10.;
+		     std::cout << "min: " << logmin << std::endl;
+		     hBG->GetYaxis()->SetRangeUser(logmin,max*10.);
+		     hSignal->GetYaxis()->SetRangeUser(logmin,max*10.);
 		     canvas->GetPad(0)->RedrawAxis();
 		     if (drawData) canvas->SaveAs(("output/plots/unblinded/logY/"+name+".png").c_str());
 		     else canvas->SaveAs(("output/plots/blinded/logY/"+name+".png").c_str());

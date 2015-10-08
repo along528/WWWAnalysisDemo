@@ -14,6 +14,8 @@ class ExamplePanel(wx.Panel):
 	self.images = images
 	self.foundItem = None
 	self.clearMode = False
+	self.blinded = True
+	self.logY = True
 
 
 	#Create Sizers for organizing materials in frame
@@ -22,25 +24,42 @@ class ExamplePanel(wx.Panel):
         self.mainSizer = wx.BoxSizer(wx.VERTICAL)
 	self.hgap = 2
 	self.vgap = 2
-	self.nrows = 2
-	self.ncols = 3
+	self.SetGridShape()
         self.grid = wx.GridSizer(rows = self.nrows, cols=self.ncols,hgap=self.hgap, vgap=self.vgap)
-        self.hSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.vSizer = wx.BoxSizer(wx.VERTICAL)
+        self.hSizerLegend = wx.BoxSizer(wx.HORIZONTAL)
+        self.hSizerRadio = wx.BoxSizer(wx.HORIZONTAL)
+        self.hSizerButtons = wx.BoxSizer(wx.HORIZONTAL)
 
 	#Build Grid of Plots
 	for index,image in enumerate(self.images):
                 self.grid.Add(image.imageControl,0,wx.ALIGN_RIGHT) 
 		image.SetGridSizer(self.grid,index)
+	self.ResizeFrame()
 	
 	#Set Bindings
-	self.Bind(wx.EVT_SIZE, self.onSize)
-        #self.Bind(wx.EVT_IDLE, self.onIdle)
+	#self.Bind(wx.EVT_SIZE, self.onSize)
         self.Bind(wx.EVT_LEFT_DOWN, self.onLeftDown)
         self.Bind(wx.EVT_LEFT_UP, self.onLeftUp)
         self.Bind(wx.EVT_MOTION, self.onMotion)
 	
 
-	self.ResizeFrame()
+
+	self.signalRectangleImage = wx.Image("input/images/SignalRectangle.png", wx.BITMAP_TYPE_ANY)
+	scale = .3
+        rectangleSize= self.signalRectangleImage.GetSize()
+	self.signalRectangleImage.Rescale(scale*rectangleSize[0],scale*rectangleSize[1],quality=wx.IMAGE_QUALITY_BICUBIC )
+	self.signalRectangleBitmap = wx.BitmapFromImage(self.signalRectangleImage)
+	self.signalRectangleImageControl = wx.StaticBitmap(self, wx.ID_ANY, self.signalRectangleBitmap)
+
+	self.bgRectangleImage = wx.Image("input/images/BGRectangle.png", wx.BITMAP_TYPE_ANY)
+        rectangleSize= self.bgRectangleImage.GetSize()
+	self.bgRectangleImage.Rescale(scale*rectangleSize[0],scale*rectangleSize[1],quality=wx.IMAGE_QUALITY_BICUBIC )
+	self.bgRectangleBitmap = wx.BitmapFromImage(self.bgRectangleImage)
+	self.bgRectangleImageControl = wx.StaticBitmap(self, wx.ID_ANY, self.bgRectangleBitmap)
+
+	self.signalTxt = wx.StaticText(self,label="Signal",style=wx.ALIGN_CENTRE)
+	self.bgTxt = wx.StaticText(self,label="Background",style=wx.ALIGN_CENTRE)
 
         #Build Buttons
         #self.button =wx.Button(self, label="Select")
@@ -53,17 +72,38 @@ class ExamplePanel(wx.Panel):
         self.Bind(wx.EVT_BUTTON, self.onPrint,self.printButton)
         self.runButton =wx.Button(self, label="Run")
         self.Bind(wx.EVT_BUTTON, self.onRun,self.runButton)
+        self.resetButton =wx.Button(self, label="Reset")
+        self.Bind(wx.EVT_BUTTON, self.onReset,self.resetButton)
+        self.resizeButton =wx.Button(self, label="Resize")
+        self.Bind(wx.EVT_BUTTON, self.onSize,self.resizeButton)
 
+	radioList = ['Yes','No']
+	self.blindingRadioBox = wx.RadioBox(self,label="Blinded?",choices=radioList,style=wx.RA_SPECIFY_COLS,majorDimension=2)
+	self.Bind(wx.EVT_RADIOBOX,self.onBlind,self.blindingRadioBox)
+	radioList = ['Yes','No']
+	self.logyRadioBox = wx.RadioBox(self,label="Log Y-axis?",choices=radioList,style=wx.RA_SPECIFY_COLS,majorDimension=2)
+	self.Bind(wx.EVT_RADIOBOX,self.onLogY,self.logyRadioBox)
 
 
 	#Apply Sizers
 	#self.hSizer.Add(self.button,0,wx.CENTER)
-	self.hSizer.Add(self.clearButton,0,wx.CENTER)
-	self.hSizer.Add(self.clearAllButton,0,wx.CENTER)
-	self.hSizer.Add(self.printButton,0,wx.CENTER)
-	self.hSizer.Add(self.runButton,0,wx.CENTER)
+	self.hSizerLegend.Add(self.signalTxt,0,wx.CENTER)
+	self.hSizerLegend.Add(self.signalRectangleImageControl ,0,wx.CENTER)
+	self.hSizerLegend.Add(self.bgTxt,0,wx.CENTER)
+	self.hSizerLegend.Add(self.bgRectangleImageControl ,0,wx.CENTER)
+	self.hSizerRadio.Add(self.blindingRadioBox,0,wx.CENTER)
+	self.hSizerRadio.Add(self.logyRadioBox,0,wx.CENTER)
+	self.hSizerButtons.Add(self.resetButton,0,wx.CENTER)
+	self.hSizerButtons.Add(self.resizeButton,0,wx.CENTER)
+	self.hSizerButtons.Add(self.clearButton,0,wx.CENTER)
+	self.hSizerButtons.Add(self.clearAllButton,0,wx.CENTER)
+	self.hSizerButtons.Add(self.printButton,0,wx.CENTER)
+	self.hSizerButtons.Add(self.runButton,0,wx.CENTER)
+	self.vSizer.Add(self.hSizerRadio,0,wx.CENTER)
+	self.vSizer.Add(self.hSizerButtons,0,wx.CENTER)
+        self.mainSizer.Add(self.hSizerLegend, 0,wx.CENTER) 
         self.mainSizer.Add(self.grid, 0) 
-        self.mainSizer.Add(self.hSizer,0,wx.CENTER) 
+        self.mainSizer.Add(self.vSizer,0,wx.CENTER) 
         self.SetSizerAndFit(self.mainSizer)
     def onLeftDown(self, event):
         '''Here we check if we are clicking on a plot and if so
@@ -71,7 +111,6 @@ class ExamplePanel(wx.Panel):
 	would be.  The threshold is temporarily stored.
 	If we are not clicking on the appropriate region
 	then nothing happens'''
-
 
 
         if not self.HasCapture(): self.CaptureMouse()
@@ -94,6 +133,52 @@ class ExamplePanel(wx.Panel):
 	        self.foundItem.Reset()
 	        self.foundItem.DrawThreshold(self.startPosition)
 
+    def SetGridShape(self):
+    	nImages = len(self.images)
+	if nImages==1:
+	    self.nrows = 1
+	    self.ncols = 1
+	elif nImages==2:
+	    self.nrows = 1
+	    self.ncols = 2
+	elif nImages==3:
+	    self.nrows = 1
+	    self.ncols = 3
+	elif nImages==4:
+	    self.nrows = 2
+	    self.ncols = 2
+	elif nImages==5 or nImages==6:
+	    self.nrows = 2
+	    self.ncols = 3
+	elif nImages==7 or nImages==8:
+	    self.nrows = 2
+	    self.ncols = 4
+	else:
+	    print "Pick fewer features"
+	    exit(2)
+    def onBlind(self,event):
+        if event.GetInt()==0: self.blinded = True
+	else: self.blinded=False
+	self.UpdatePlots()
+	#Necessary to keep arrows on new plots
+	for image in self.images: image.Reset()
+    def onReset(self,event):
+	for image in self.images:
+	    image.SetImageNames(useInput=True)
+	self.UpdatePlots()
+	self.ClearAll()
+	#Necessary to keep arrows on new plots
+	for image in self.images: image.Reset()
+    def onLogY(self,event):
+        if event.GetInt()==0: self.logY = True
+	else: self.logY=False
+	self.UpdatePlots()
+	#Necessary to keep arrows on new plots
+	for image in self.images: image.Reset()
+    def UpdatePlots(self):
+        for image in self.images:
+	    image.ChangeImage(self.blinded,self.logY)
+	self.ResizeFrame()
     def onMotion(self,event):
     	'''While holding down the left button
 	we try to determine the direction that the cut
@@ -170,6 +255,11 @@ class ExamplePanel(wx.Panel):
 	system("root -q -b -l RunCuts.cxx")
 	system("root -q -b -l WriteHistograms.cxx")
 	system("root -q -b -l Draw.cxx")
+	for image in self.images:
+	    image.SetImageNames(useInput=False)
+	self.UpdatePlots()
+	#Necessary to keep arrows on new plots
+	for image in self.images: image.Reset()
 	print "Done!"
 
     def onClear(self,event):
@@ -183,8 +273,9 @@ class ExamplePanel(wx.Panel):
 	if i < 0: return
 	self.images[i].Clear()
     def ResizeFrame(self):
+    	print "size"
 	frameSize =  self.parent.GetClientSize()
-	availableYSpace = frameSize[1]/self.nrows - self.vgap*(self.nrows+1)
+	availableYSpace = frameSize[1]/self.nrows - self.vgap*(self.nrows+1) - 50
 	availableXSpace = frameSize[0]/self.ncols - self.hgap*(self.ncols+1)
 	for image in self.images:
 	    #image = wx.Image(image.imageName, wx.BITMAP_TYPE_ANY)
@@ -202,7 +293,6 @@ class ExamplePanel(wx.Panel):
 
     def onSize(self, event):
 	self.ResizeFrame()
-	self.reInitBuffer = False
 	event.Skip(True)
     def EvtRadioBox(self, event):
         self.logger.AppendText('EvtRadioBox: %d\n' % event.GetInt())
@@ -219,7 +309,7 @@ class ExamplePanel(wx.Panel):
     def EvtCheckBox(self, event):
         self.logger.AppendText('EvtCheckBox: %d\n' % event.Checked())
 app = wx.App(False)
-frame = wx.Frame(None,size=(800,560)) #,style=wx.MAXIMIZE)
+frame = wx.Frame(None,size=(1100,700)) #,style=wx.MAXIMIZE)
 
 images = []
 images.append(FeatureImage("nsfos",frame,cutAtBinEdge=True))
@@ -227,7 +317,10 @@ images.append(FeatureImage("pt",frame,cutAtBinEdge=False))
 images.append(FeatureImage("met",frame,cutAtBinEdge=False))
 images.append(FeatureImage("nbjets",frame,cutAtBinEdge=True))
 images.append(FeatureImage("njets",frame,cutAtBinEdge=True))
-images.append(FeatureImage("masselel",frame,cutAtBinEdge=True))
+images.append(FeatureImage("masselel",frame,cutAtBinEdge=False))
+#images.append(FeatureImage("masssfos",frame,cutAtBinEdge=False))
+images.append(FeatureImage("deltaphi",frame,cutAtBinEdge=False))
+images.append(FeatureImage("nmuons",frame,cutAtBinEdge=True))
 #images.append(FeatureImage("nsfos","output/plots/unblinded/logY/nsfos.png",frame))
 #images.append(FeatureImage("NSFOS","input/SFOSSignalRegions.png",frame,xmin=0,xmax=3,nbins=3))
 panel = ExamplePanel(frame,images)
