@@ -43,8 +43,8 @@ class ExamplePanel(wx.Panel):
 	self.ResizeFrame()
 
         #Build Buttons
-        self.button =wx.Button(self, label="Select")
-        self.Bind(wx.EVT_BUTTON, self.OnClick,self.button)
+        #self.button =wx.Button(self, label="Select")
+        #self.Bind(wx.EVT_BUTTON, self.OnClick,self.button)
         self.clearButton =wx.Button(self, label="Clear")
         self.Bind(wx.EVT_BUTTON, self.onClear,self.clearButton)
         self.clearAllButton =wx.Button(self, label="Clear All")
@@ -57,7 +57,7 @@ class ExamplePanel(wx.Panel):
 
 
 	#Apply Sizers
-	self.hSizer.Add(self.button,0,wx.CENTER)
+	#self.hSizer.Add(self.button,0,wx.CENTER)
 	self.hSizer.Add(self.clearButton,0,wx.CENTER)
 	self.hSizer.Add(self.clearAllButton,0,wx.CENTER)
 	self.hSizer.Add(self.printButton,0,wx.CENTER)
@@ -156,7 +156,6 @@ class ExamplePanel(wx.Panel):
 		if index>0:  
 			if image.feature.logicalAND: print "\tAND"
 			else: print "\tOR"
-		print cut
 	        print "\t%s %3.2f" % ((">" if direction>0 else "<"),float(cut))
 		index+=1
     def onRun(self,event):

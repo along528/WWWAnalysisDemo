@@ -74,8 +74,9 @@ class FeatureImage:
 	positionFraction = float(position[0]-self.GetPosition()[0])/float(self.GetSize()[0])
 	positionPhysical = (self.xmax-self.xmin)*(positionFraction-self.fractionBinStart)/(self.fractionBinEnd-self.fractionBinStart) + self.xmin
         if self.doCutAtBinEdge:
-	    positionFraction = self.getLowBinEdge(positionFraction,True)
-	    positionPhysical = self.getLowBinEdge(positionFraction)
+	    positionFractionTmp = positionFraction
+	    positionFraction = self.getLowBinEdge(positionFractionTmp,True)
+	    positionPhysical = self.getLowBinEdge(positionFractionTmp)
 	if physical: return positionPhysical
 	return positionFraction
     def Save(self):
@@ -292,8 +293,7 @@ class FeatureImage:
 	    position += step
 	    binnum+=1
 
-	#if binnum < 0:  binnum = 0
-	
+	if binnum < 0:  binnum = 0
 	if binnum < 0  or binnum > self.nbins-1: 
 		return None
 	binEdge = self.xmin + (self.xmax - self.xmin)*binnum/self.nbins
