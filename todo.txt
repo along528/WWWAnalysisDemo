@@ -1,3 +1,5 @@
+it should check in the end if you cut too hard
+
 bugs:
    there is a problem in the nsfos plot when cutting at the bin edges
    if I try to do 1<=nsfos<2 it won't redraw, but it will if I do 0<=nsfos<1 or 0<=nsfos<2

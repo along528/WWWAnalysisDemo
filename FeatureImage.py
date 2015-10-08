@@ -2,49 +2,146 @@
 import wx
 import math
 from Feature import Feature
+from sys import exit
+import HistTools
 class FeatureImage:
-    def __init__(self,name,imageName,frame,xmin=-1,xmax=-1,nbins=0):
+    def __init__(self,name,frame,cutAtBinEdge=False):
     	self.name = name
 	self.feature = Feature(name)
-	self.imageName = imageName
+	self.fractionBinStart = 1.65/16.6
+	self.fractionBinEnd = 15.95/16.6
+	self.fractionTopStart =  0.65/29.8
+	self.fractionBottomEnd =  26.68/29.8
+	self.binsPhysical = []
+	self.binsFraction= []
+	self.imageName = "input/plots/unblinded/logY/"+name+".png"
 	self.image = wx.Image(self.imageName, wx.BITMAP_TYPE_ANY)
 	self.bitmap = wx.BitmapFromImage(self.image)
 	self.frame = frame
 	self.imageControl = wx.StaticBitmap(self.frame, wx.ID_ANY, self.bitmap)
-        self.xmin = xmin
-        self.xmax = xmax
-        self.nbins = nbins
 	self.gridSizer = None
 	self.cutDirection = 0
+	self.nbins = 0
+	self.xmin = -1
+	self.xmax = -1
+	self.isLogX = False
 	self.index = -1
 	self.dc = None
-	self.doCutAtBinEdge = False
+	self.doCutAtBinEdge = cutAtBinEdge
 	self.tmpLines = {}
 	self.savedLines = []
 	self.CutThresholdsAndDirections = []
 	self.feature.logicalAND = False #otherwise OR
 	self.CutPositions = []
+	self.Configure()
 	#from looking at an image
 	#the first gives the end point of the left margin
 	#as a fraction of the total width
-	"""
-	self.fractionBinStart = 52./326.
-	#and this gives the start point of the right margin
-	#as a fraction of the total width
-	self.fractionBinEnd = 307./326.
-	self.fractionTopStart =  6/311.
-	self.fractionBottomEnd =  204/311.
-	"""
-	self.fractionBinStart = 1.65/16.6
-	#and this gives the start point of the right margin
-	#as a fraction of the total width
-	self.fractionBinEnd = 15.95/16.6
-	self.fractionTopStart =  0.65/29.8
-	self.fractionBottomEnd =  26.68/29.8
-
+    def Configure(self):
+    	nbins = 0
+	xmin = -1 
+	xmax = -1
+	isLogX = False
+        if self.name=="nbjets":
+	    nbins = 4
+	    xmin = -.5
+	    xmax = 3.5
+	    isLogX = False
+        elif self.name=="njets":
+	    nbins = 10
+	    xmin = -.5
+	    xmax = 9.5
+	    isLogX = False
+        elif self.name=="pt":
+	    nbins = 30
+	    xmin = 20
+	    xmax = 1000
+	    isLogX = True
+        elif self.name=="phi":
+	    nbins = 16
+	    xmin = -math.pi()
+	    xmax = math.pi()
+	    isLogX = False
+        elif self.name=="eta":
+	    nbins = 15
+	    xmin = -2.5
+	    xmax = 2.5
+	    isLogX = False
+        elif self.name=="charge":
+	    nbins = 7
+	    xmin = -3.5
+	    xmax = 3.5
+	    isLogX = False
+        elif self.name=="masselel":
+	    nbins = 20
+	    xmin = 1.1876
+	    xmax = 201.1876
+	    isLogX = False
+        elif self.name=="masselmu":
+	    nbins = 20
+	    xmin = 1.1876
+	    xmax = 201.1876
+	    isLogX = False
+        elif self.name=="massmumu":
+	    nbins = 20
+	    xmin = 1.1876
+	    xmax = 201.1876
+	    isLogX = False
+        elif self.name=="masssfos":
+	    nbins = 20
+	    xmin = 1.1876
+	    xmax = 201.1876
+	    isLogX = False
+        elif self.name=="met":
+	    nbins = 30
+	    xmin = 20
+	    xmax = 1000
+	    isLogX = True
+        elif self.name=="metphi":
+	    nbins = 16
+	    xmin = -math.pi()
+	    xmax = math.pi()
+	    isLogX = False
+        elif self.name=="metsumet":
+	    nbins = 30
+	    xmin = 100.
+	    xmax = 10000.
+	    isLogX = True
+        elif self.name=="nsfos":
+	    nbins = 3
+	    xmin = -.5
+	    xmax = 2.5
+	    isLogX = False
+        elif self.name=="nmuons":
+	    nbins = 4
+	    xmin = -.5
+	    xmax = 3.5
+	    isLogX = False
+        elif self.name=="mt":
+	    nbins = 30
+	    xmin = 20
+	    xmax = 1000
+	    isLogX = True
+        elif self.name=="deltaphi":
+	    nbins = 16
+	    xmin = -math.pi()
+	    xmax = math.pi()
+	    isLogX = False
+	else:
+	    print "Error! Couldn't configure feature with name",self.name
+	    exit(2)
 	
+	self.xmin = xmin
+	self.xmax = xmax
+	self.nbins = nbins
+	self.isLogX = isLogX
+	if self.isLogX: 
+	    self.binsPhysical = HistTools.getLogBins(nbins,xmin,xmax)
+	    self.binsFraction = HistTools.getLogBins(nbins,self.fractionBinStart,self.fractionBinEnd)
+	else:
+	    self.binsPhysical = HistTools.getLinearBins(nbins,xmin,xmax)
+	    self.binsFraction = HistTools.getLinearBins(nbins,self.fractionBinStart,self.fractionBinEnd)
 
-	self.cuts=[]
     def ProcessCuts(self):
         self.feature.Reset()
     	for cut,direction in self.CutThresholdsAndDirections:
@@ -72,11 +169,18 @@ class FeatureImage:
 	return False
     def GetMousePosition(self,position,physical=False):
 	positionFraction = float(position[0]-self.GetPosition()[0])/float(self.GetSize()[0])
-	positionPhysical = (self.xmax-self.xmin)*(positionFraction-self.fractionBinStart)/(self.fractionBinEnd-self.fractionBinStart) + self.xmin
+	#positionPhysical = (self.xmax-self.xmin)*(positionFraction-self.fractionBinStart)/(self.fractionBinEnd-self.fractionBinStart) + self.xmin
+	positionPhysical = -1.
+	print "range",self.fractionBinStart,self.fractionBinEnd,self.xmin,self.xmax
+	if self.isLogX:
+	    positionPhysical = HistTools.convertLogFractionToPhysical(positionFraction,self.fractionBinStart,self.fractionBinEnd,self.xmin,self.xmax)
+	else:
+	    positionPhysical = HistTools.convertLinearFractionToPhysical(positionFraction,self.fractionBinStart,self.fractionBinEnd,self.xmin,self.xmax)
         if self.doCutAtBinEdge:
 	    positionFractionTmp = positionFraction
 	    positionFraction = self.getLowBinEdge(positionFractionTmp,True)
 	    positionPhysical = self.getLowBinEdge(positionFractionTmp)
+	print positionPhysical,positionFraction
 	if physical: return positionPhysical
 	return positionFraction
     def Save(self):
@@ -282,25 +386,17 @@ class FeatureImage:
 	        self.DrawLines(cut[line])
     def getLowBinEdge(self,xvalue, getInXCoordinates=False):
     	#xvalue should be the fraction along the total width of the image
-
-	position = self.fractionBinStart
-	step = (self.fractionBinEnd - self.fractionBinStart)/self.nbins
-	binnum = -1
-
-	while True: #position < self.fractionBinEnd:
-	    if xvalue <= position:
+	eps = .00001
+	binIndex = 0
+	lowFraction = -1.
+	highFraction = -1.
+	for binIndex in range(len(self.binsFraction)):
+	    lowFraction = self.binsFraction[binIndex]
+	    highFraction = self.binsFraction[binIndex+1]
+	    if xvalue-eps < highFraction and xvalue+eps >= lowFraction:
 	        break
-	    position += step
-	    binnum+=1
-
-	if binnum < 0:  binnum = 0
-	if binnum < 0  or binnum > self.nbins-1: 
-		return None
-	binEdge = self.xmin + (self.xmax - self.xmin)*binnum/self.nbins
-	if getInXCoordinates:
-		return position - step
-		
-	return binEdge
+	if getInXCoordinates: return self.binsFraction[binIndex]
+	return self.binsPhysical[binIndex]
     def GetPosition(self):
     	if self.gridSizer!=None and self.index >=0:
 	    return self.gridSizer.GetItem(self.index).GetPosition()
