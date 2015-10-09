@@ -252,9 +252,9 @@ class ExamplePanel(wx.Panel):
 	        ofile.write(image.feature.cutString+"\n")
 	ofile.close()
 	#I may want to make this pre-compiled
-	system("root -q -b -l RunCuts.cxx")
-	system("root -q -b -l WriteHistograms.cxx")
-	system("root -q -b -l Draw.cxx")
+	system("root -q -b -l src/RunCuts.cxx")
+	system("root -q -b -l src/WriteHistograms.cxx")
+	system("root -q -b -l src/Draw.cxx")
 	for image in self.images:
 	    image.SetImageNames(useInput=False)
 	self.UpdatePlots()

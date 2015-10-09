@@ -1,7 +1,9 @@
-To get the inputs:
+
+To start you first need to download the inputs:
+./download.
+
+Then you may run:
+./run
 
 
-Data can be found at
-at0.bu.edu:/home/graduate/along528/gpfs1/demo/data/new/data.root
-while signal plus background can be found at
-at0.bu.edu:/home/graduate/along528/gpfs1/demo/inputs/new/combined.root
+

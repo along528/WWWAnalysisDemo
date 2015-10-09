@@ -3,7 +3,7 @@ import wx
 import math
 from Feature import Feature
 from sys import exit
-import HistTools
+import HistTools as HistTools
 class FeatureImage:
     def __init__(self,name,frame,cutAtBinEdge=False):
     	self.name = name
