@@ -1,5 +1,5 @@
 
-wget https://www.dropbox.com/s/av9g3i6ib08eaxs/combined.root?dl=1 
+wget https://www.dropbox.com/s/av9g3i6ib08eaxs/combined.root
 mv combined.root input/
 
 #Password protected
