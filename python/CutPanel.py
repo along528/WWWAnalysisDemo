@@ -1,6 +1,6 @@
 import wx
 from FeatureImage import FeatureImage
-from os import system
+from os import system,path
 import math
 
 
@@ -28,6 +28,7 @@ class CutPanel(wx.Panel):
         self.hSizerRadio = wx.BoxSizer(wx.HORIZONTAL)
         self.hSizerButtons = wx.BoxSizer(wx.HORIZONTAL)
 
+	self.haveData = path.isfile("input/data.root")
 	#Build Grid of Plots
 	for index,image in enumerate(self.images):
                 self.grid.Add(image.imageControl,0,wx.ALIGN_RIGHT) 
@@ -74,9 +75,10 @@ class CutPanel(wx.Panel):
         self.resizeButton =wx.Button(self, label="Resize")
         self.Bind(wx.EVT_BUTTON, self.onSize,self.resizeButton)
 
-	radioList = ['Yes','No']
-	self.blindingRadioBox = wx.RadioBox(self,label="Blinded?",choices=radioList,style=wx.RA_SPECIFY_COLS,majorDimension=2)
-	self.Bind(wx.EVT_RADIOBOX,self.onBlind,self.blindingRadioBox)
+	if self.haveData:
+	    radioList = ['Yes','No']
+	    self.blindingRadioBox = wx.RadioBox(self,label="Blinded?",choices=radioList,style=wx.RA_SPECIFY_COLS,majorDimension=2)
+	    self.Bind(wx.EVT_RADIOBOX,self.onBlind,self.blindingRadioBox)
 	radioList = ['Yes','No']
 	self.logyRadioBox = wx.RadioBox(self,label="Log Y-axis?",choices=radioList,style=wx.RA_SPECIFY_COLS,majorDimension=2)
 	self.Bind(wx.EVT_RADIOBOX,self.onLogY,self.logyRadioBox)
@@ -88,7 +90,7 @@ class CutPanel(wx.Panel):
 	self.hSizerLegend.Add(self.signalRectangleImageControl ,0,wx.CENTER)
 	self.hSizerLegend.Add(self.bgTxt,0,wx.CENTER)
 	self.hSizerLegend.Add(self.bgRectangleImageControl ,0,wx.CENTER)
-	self.hSizerRadio.Add(self.blindingRadioBox,0,wx.CENTER)
+	if self.haveData: self.hSizerRadio.Add(self.blindingRadioBox,0,wx.CENTER)
 	self.hSizerRadio.Add(self.logyRadioBox,0,wx.CENTER)
 	self.hSizerButtons.Add(self.resetButton,0,wx.CENTER)
 	self.hSizerButtons.Add(self.resizeButton,0,wx.CENTER)

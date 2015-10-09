@@ -18,7 +18,10 @@ void WriteHistograms(){
 	TFile *predictionFile = new TFile("output/output.root");
 	TTree *tree = (TTree*)predictionFile->Get("physics");
 	TFile *dataFile = new TFile("output/dataoutput.root");
-	TTree *dataTree = (TTree*)dataFile->Get("physics");
+	bool haveData = false;
+	if(dataFile->IsOpen()) haveData = true;
+	TTree *dataTree = NULL;
+	if (haveData) dataTree = (TTree*)dataFile->Get("physics");
 
 
 
@@ -130,23 +133,25 @@ void WriteHistograms(){
 	tree->Draw("masses_MuMu/1000.>>bg_massmumu",bgCut*weight);
 	tree->Draw("masses_SFOS/1000.>>bg_masssfos",bgCut*weight);
 
-        dataTree->Draw("nSFOS>>data_nsfos");
-	dataTree->Draw("lep_pt/1000.>>data_pt");
-	dataTree->Draw("allLep_mt/1000.>>data_mt");
-	dataTree->Draw("lep_eta>>data_eta");
-	dataTree->Draw("lep_phi>>data_phi");
-	dataTree->Draw("allLep_deltaPhiMET>>data_deltaphi");
-	dataTree->Draw("lep_charge>>data_charge");
-	dataTree->Draw("Sum$(lep_isMuon)>>data_nmuons");
-	dataTree->Draw("@jets_btagged.size()>>data_njets");
-	dataTree->Draw("btagEff85>>data_nbjets");
-	dataTree->Draw("MET_final_Et/1000.>>data_met");
-	dataTree->Draw("MET_final_phi>>data_metphi");
-	dataTree->Draw("MET_final_sumEt/1000.>>data_metsumet");
-	dataTree->Draw("masses_ElEl/1000.>>data_masselel");
-	dataTree->Draw("masses_ElMu/1000.>>data_masselmu");
-	dataTree->Draw("masses_MuMu/1000.>>data_massmumu");
-	dataTree->Draw("masses_SFOS/1000.>>data_masssfos");
+	if(haveData){
+		dataTree->Draw("nSFOS>>data_nsfos");
+		dataTree->Draw("lep_pt/1000.>>data_pt");
+		dataTree->Draw("allLep_mt/1000.>>data_mt");
+		dataTree->Draw("lep_eta>>data_eta");
+		dataTree->Draw("lep_phi>>data_phi");
+		dataTree->Draw("allLep_deltaPhiMET>>data_deltaphi");
+		dataTree->Draw("lep_charge>>data_charge");
+		dataTree->Draw("Sum$(lep_isMuon)>>data_nmuons");
+		dataTree->Draw("@jets_btagged.size()>>data_njets");
+		dataTree->Draw("btagEff85>>data_nbjets");
+		dataTree->Draw("MET_final_Et/1000.>>data_met");
+		dataTree->Draw("MET_final_phi>>data_metphi");
+		dataTree->Draw("MET_final_sumEt/1000.>>data_metsumet");
+		dataTree->Draw("masses_ElEl/1000.>>data_masselel");
+		dataTree->Draw("masses_ElMu/1000.>>data_masselmu");
+		dataTree->Draw("masses_MuMu/1000.>>data_massmumu");
+		dataTree->Draw("masses_SFOS/1000.>>data_masssfos");
+	}
 
         hSignalNSFOS->Write();
         hSignalPt->Write();
@@ -184,23 +189,25 @@ void WriteHistograms(){
         hBGMassMuMu->Write();
         hBGMassSFOS->Write();
 
-        hDataNSFOS->Write();
-        hDataPt->Write();
-        hDataMt->Write();
-        hDataEta->Write();
-        hDataPhi->Write();
-        hDataDeltaPhi->Write();
-        hDataCharge->Write();
-        hDataNMuons->Write();
-        hDataNJets->Write();
-        hDataNBJets->Write();
-        hDataMET->Write();
-        hDataMETPhi->Write();
-        hDataMETSumEt->Write();
-        hDataMassElEl->Write();
-        hDataMassElMu->Write();
-        hDataMassMuMu->Write();
-        hDataMassSFOS->Write();
+	if(haveData){
+		hDataNSFOS->Write();
+		hDataPt->Write();
+		hDataMt->Write();
+		hDataEta->Write();
+		hDataPhi->Write();
+		hDataDeltaPhi->Write();
+		hDataCharge->Write();
+		hDataNMuons->Write();
+		hDataNJets->Write();
+		hDataNBJets->Write();
+		hDataMET->Write();
+		hDataMETPhi->Write();
+		hDataMETSumEt->Write();
+		hDataMassElEl->Write();
+		hDataMassElMu->Write();
+		hDataMassMuMu->Write();
+		hDataMassSFOS->Write();
+	}
 
 
 

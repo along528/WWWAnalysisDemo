@@ -47,22 +47,24 @@ void RunCuts(){
 	outputTreeFile->Close();
 	inputTreeFile->Close();
 
-	std::cout << "Data:" <<std::endl;
 	TFile *inputDataTreeFile = new TFile("input/data.root");
-	TTree *inputDataTree = (TTree*)inputDataTreeFile->Get("physics");
-	TFile *outputDataTreeFile = new TFile("output/dataoutput.root","recreate");
-	//TFile *outputTreeFile = new TFile("output/data.root","recreate");
-	nEventsBefore = inputDataTree->GetEntries();
-	std::cout << "# Entries before cuts: " << nEventsBefore << std::endl;
-	outputTreeName = "physics_cut";
-	inputDataTree->CopyTree(cuts)->Write(outputTreeName.c_str());
-	outputDataTreeFile->Write();
-	TTree *outputDataTree = (TTree*)outputDataTreeFile->Get(outputTreeName.c_str());
-	nEventsAfter = outputDataTree->GetEntries();
-	std::cout << "# Entries after cuts: " << nEventsAfter << std::endl;
-	if (nEventsBefore!=0.) std::cout << "Filter Efficiency = " <<  nEventsAfter/nEventsBefore << std::endl;
-	outputDataTreeFile->Close();
-	inputDataTreeFile->Close();
+	if(inputDataTreeFile->IsOpen()){
+	        std::cout << "Data:" <<std::endl;
+		TTree *inputDataTree = (TTree*)inputDataTreeFile->Get("physics");
+		TFile *outputDataTreeFile = new TFile("output/dataoutput.root","recreate");
+		//TFile *outputTreeFile = new TFile("output/data.root","recreate");
+		nEventsBefore = inputDataTree->GetEntries();
+		std::cout << "# Entries before cuts: " << nEventsBefore << std::endl;
+		outputTreeName = "physics_cut";
+		inputDataTree->CopyTree(cuts)->Write(outputTreeName.c_str());
+		outputDataTreeFile->Write();
+		TTree *outputDataTree = (TTree*)outputDataTreeFile->Get(outputTreeName.c_str());
+		nEventsAfter = outputDataTree->GetEntries();
+		std::cout << "# Entries after cuts: " << nEventsAfter << std::endl;
+		if (nEventsBefore!=0.) std::cout << "Filter Efficiency = " <<  nEventsAfter/nEventsBefore << std::endl;
+		outputDataTreeFile->Close();
+		inputDataTreeFile->Close();
+	}
 
 	
 
