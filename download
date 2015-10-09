@@ -3,4 +3,4 @@ wget https://www.dropbox.com/s/av9g3i6ib08eaxs/combined.root
 mv combined.root input/
 
 #Password protected
-scp at0.bu.edu:/home/graduate/along528/gpfs1/demo/inputs/new/combined.root input/
+scp at0.bu.edu:/home/graduate/along528/gpfs1/demo/data/new/data.root input/
