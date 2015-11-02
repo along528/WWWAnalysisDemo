@@ -94,8 +94,8 @@ void Draw(){
 		     if (minSignal < min) min = minSignal;
 		     if (maxSignal > max) max = maxSignal;
 		     if (previousMinSignal < previousMinBG) previousMin = minSignal;
-		     if (min==0.) min = previousMin;  //if 0 set to the one before
-		     if (min==0.) min = .01; //if for some reason still 0, just set it to something non-zero
+		     if (min<=0.) min = previousMin;  //if 0 set to the one before
+		     if (min<=0.) min = .01; //if for some reason still 0, just set it to something non-zero
 			
 
 

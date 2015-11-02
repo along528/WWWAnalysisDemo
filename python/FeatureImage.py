@@ -302,7 +302,8 @@ class FeatureImage:
 	self.positionPhysical = self.GetMousePosition(position,physical=True)
     def DrawLines(self,*args):
 	dc = wx.MemoryDC(self.bitmap)
-	dc.SetPen(wx.Pen(wx.RED, 1))
+	#dc.SetPen(wx.Pen(wx.RED, 1))
+	dc.SetPen(wx.Pen(wx.BLACK, 1))
 	for line in args:
 		x1,y1 = line[0]
 		x2,y2 = line[1]
